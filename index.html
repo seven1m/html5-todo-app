@@ -45,6 +45,7 @@
         // delete to do when clicking 'x'
         $('.delete').live('click', function(e) {
           $(e.target).parent('li').remove();
+          $('#delSound')[0].play();
           saveTodos();
           return false;
         });
@@ -146,5 +147,9 @@
       <div id="qrcode"></div>
       <a href="#" class="back">back</a>
     </div>
+    <audio id="delSound" preload>
+      <source src="mp3/boom.mp3"/>
+      <source src="mp3/boom.ogg"/>
+    </audio>
   </body>
 </html>
