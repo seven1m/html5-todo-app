@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# rev 1
+# rev 2
 
 CACHE:
 index.html
@@ -7,6 +7,8 @@ js/jquery-1.6.3.min.js
 js/qrcode.js
 js/qrcanvas.js
 img/cat.jpg
+mp3/boom.mp3
+mp3/boom.ogg
 
 NETWORK:
 http://maps.gstatic.com/
