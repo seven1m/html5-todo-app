@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" manifest="cache.manifest">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width" />
+    <script src="js/jquery-1.6.3.min.js"></script>
+    <script src="js/qrcode.js"></script>
+    <script src="js/qrcanvas.js"></script>
+    <script src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
+    <script>
+      var currentLoc;
+
+      $(function() {
+        // get location
+        if(navigator.geolocation){
+          var geocoder;
+          try {
+            geocoder = new google.maps.Geocoder();
+          } catch(e) {
+          }
+          if(geocoder) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+              var latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+              geocoder.geocode({'latLng': latlng}, function(results, status) {
+                if (status == google.maps.GeocoderStatus.OK && results[1]) {
+                  currentLoc = results[1].formatted_address;
+                }
+              });
+            });
+          }
+        }
+
+        // clicking checkbox toggles done state
+        $('#list li input[type=checkbox]').live('click', function(e) {
+          saveTodos();
+        });
+
+        // create new to do when clicking 'new'
+        $('#new').click(function() {
+          var title = prompt('To Do:');
+          createTodo(title);
+          return false;
+        });
+
+        // delete to do when clicking 'x'
+        $('.delete').live('click', function(e) {
+          $(e.target).parent('li').remove();
+          saveTodos();
+          return false;
+        });
+
+        // clicking title shows qrcode
+        $('.title').live('click', function(e) {
+          var title = $(e.target).html();
+          var loc = $(e.target).parent().find('.loc').html();
+          $('#todos').hide();
+          append_qrcode(8, 'qrcode', location.href + '#' + JSON.stringify([title, loc]));
+          $('#todo').show();
+          $('.back').click(function() {
+            $('#qrcode').empty();
+            $('#todo').hide();
+            $('#todos').show();
+            return false;
+          });
+          return false;
+        });
+
+        loadTodos();
+        checkHash();
+      });
+
+      function checkHash() {
+        var hash = new String(location.hash).replace(/^#/, '')
+        if(hash != '') {
+          var todo = JSON.parse(hash)
+          createTodo(todo[0], false, todo[1]);
+          location.hash = '';
+        }
+      }
+
+      $(window).bind('hashchange', checkHash);
+
+      function buildTodo(title, done, loc) {
+        return "<li><input type='checkbox' " + (done ? "checked='checked'" : '') + "/> <a href='#' class='title'>" + title + "</a> <a href='#' class='delete'>x</a> <br/><span class='loc'>" + (loc || '') + "</span></li>";
+      }
+
+      function createTodo(title, done, loc) {
+        $('#list').append(buildTodo(title, !!done, loc || currentLoc));
+        saveTodos();
+      }
+
+      function loadTodos() {
+        if(localStorage['todos']) {
+          var todos = JSON.parse(localStorage['todos']);
+          for(var i=0; i<todos.length; i++) {
+            var todo = todos[i];
+            $('#list').append(buildTodo(todo.title, todo.done, todo.loc));
+          };
+        }
+      }
+
+      function saveTodos() {
+        var todos = []
+        var lis = $('#list li')
+        for(var i=0; i<lis.length; i++) {
+          var li = $(lis[i]);
+          todos.push({
+            title: li.find('.title').html(),
+            done:  li.find('input').prop('checked'),
+            loc:   li.find('.loc').html()
+          });
+        };
+        localStorage['todos'] = JSON.stringify(todos);
+      }
+    </script>
+    <style type="text/css">
+      #todos {
+        min-height: 1000px;
+      }
+      #list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      li input {
+        vertical-align: middle;
+      }
+      .delete {
+        float: right;
+      }
+      .loc {
+        padding-left: 25px;
+        font-style: italic;
+        color: #999;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="img/cat.jpg"/>
+    <div id="todos">
+      <ul id="list">
+      </ul>
+      <p><a href="#" id="new">new</a></p>
+    </div>
+    <div id="todo" style="display:none;">
+      <div id="qrcode"></div>
+      <a href="#" class="back">back</a>
+    </div>
+  </body>
+</html>
